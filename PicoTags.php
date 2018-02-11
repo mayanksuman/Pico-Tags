@@ -22,7 +22,11 @@
 
 class PicoTags extends AbstractPicoPlugin
 {
-
+    /**
+    * List of all the tags found
+    */
+    protected $all_tags = array();
+    
     /**
      * Register the "Tags" and "Filter" meta header fields.
      *
@@ -52,6 +56,7 @@ class PicoTags extends AbstractPicoPlugin
         }
         $meta['tags'] = PicoTags::parseTags($meta['tags']);
         $meta['filter'] = array_merge($urlFilter, PicoTags::parseTags($meta['filter']));
+        $meta['filter'] = array_map('trim', $meta['filter']);
     }
 
     /**
@@ -74,8 +79,9 @@ class PicoTags extends AbstractPicoPlugin
             $tagsToShow = $currentPage['meta']['filter'];
 
             $pages = array_filter($pages, function ($page) use ($tagsToShow) {
-                $tags = PicoTags::parseTags($page['meta']['tags']);
-                return count(array_intersect($tagsToShow, $tags)) > 0;
+                $tags = $page['meta']['tags'];
+                $this->all_tags= array_merge($this->all_tags,$tags);
+                return count(array_intersect($tagsToShow, array_map('trim', $tags))) > 0;
             });
         }
     }
@@ -94,6 +100,20 @@ class PicoTags extends AbstractPicoPlugin
 
         $tags = explode(',', $tags);
 
-        return is_array($tags) ? array_map('trim', $tags) : array();
+        return is_array($tags) ? $tags : array();
     }
-}
+    
+    /**
+     * Triggered before Pico renders the page
+     *
+     * @see    Pico::getTwig()
+     * @see    DummyPlugin::onPageRendered()
+     * @param  Twig_Environment &$twig          twig template engine
+     * @param  array            &$twigVariables template variables
+     * @param  string           &$templateName  file name of the template
+     * @return void
+     */
+    public function onPageRendering(Twig_Environment &$twig, array &$twigVariables)
+    {
+        $twigVariables['all_tags'] = $this->all_tags;
+     }
