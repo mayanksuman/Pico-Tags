@@ -35,6 +35,7 @@ To only show pages with certain tags on another page, use the `Filter` header, e
 ```
 ---
 Title: Blog
+FilterGetParam: filter
 Filter: blog
 Template: blog-list
 ---
